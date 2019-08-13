@@ -1,0 +1,20 @@
+{
+  "name": "asw_importbx",
+  "version": "1.0.0",
+  "description": "This is an automated way of importing of BX files and further reporting",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ASW_ImportBX"
+  },
+  "author": "Ivan Burzakovskyi",
+  "license": "ISC",
+  "dependencies": {
+    "commander": "^3.0.0",
+    "fs": "0.0.1-security",
+    "npm": "^6.10.3"
+  }
+}
