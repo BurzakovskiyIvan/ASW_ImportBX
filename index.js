@@ -1,5 +1,6 @@
 const program = require('commander');
 const { prompt } = require('inquirer');
+const { validateAnswer, startTesting } = require('./test');
 
 const questions = [
     {
@@ -20,7 +21,9 @@ program
     .action(() => {
         prompt(questions)
             .then((answers) => {
-                console.log(answers);          
+                if(validateAnswer(answers.initialFolderCreation)) {
+                    startTesting();
+                }      
             });
     });
     
