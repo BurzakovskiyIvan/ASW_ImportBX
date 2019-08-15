@@ -16,6 +16,7 @@
     "commander": "^3.0.0",
     "fs": "0.0.1-security",
     "inquirer": "^6.5.1",
+    "line-by-line": "^0.1.6",
     "mime-types": "^2.1.24",
     "npm": "^6.10.3"
   }

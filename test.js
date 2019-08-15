@@ -1,4 +1,5 @@
 const fs = require('fs');
+const LineByLineReader = require('line-by-line');
 
 const INITIAL_FOLDER_PATH = "C:\\For_testing";
 const REPORT_FILE_PATH = `${INITIAL_FOLDER_PATH}/Report.txt`;
@@ -7,7 +8,8 @@ const DEST_FOLDER_PATH_32 = "C:\\Program Files\\StoreLine\\Office\\Import";
 
 let reportStream,
     initialFolderContent = [],
-    trueDestFolder;
+    trueDestFolder,
+    promotionsInBX257 = [];
 
 function validateAnswer(answer) {
     if(answer !== "done") {
@@ -120,12 +122,43 @@ function searchForBX257() {
     for(let i = 0, len = initialFolderContent.length; i < len; i++) {
         if(initialFolderContent[i].toUpperCase().substr(0, 5) === "BX257") {
             addLogToReportFile(`--- File ${initialFolderContent[i]} was found ---`);
+            readBX257(initialFolderContent[i]);
             bx257Exists = true;
             break;
         }
     }
     if(!bx257Exists) addLogToReportFile("--- File BX257 was not found... ---");
     return bx257Exists;
+}
+
+function readBX257(file) {
+    addLogToReportFile(`--- Start reading the file ${file} ---`);
+    let fullPathToBX257 = INITIAL_FOLDER_PATH + "/" + file;
+    let lineReader = new LineByLineReader(fullPathToBX257);
+
+    lineReader.on("error", err => { throw err });
+
+    lineReader.on("line", line => {
+        promotionsInBX257.push({
+            id: parseInt(line.substring(64, 74)),
+            name: line.substring(80, 100).trim(),
+            startDate: convertDate(line.substring(117, 124).trim()),
+            endDate: convertDate(line.substring(74, 81).trim())
+        })
+    });
+
+    lineReader.on("end", () => {
+        promotionsInBX257.shift(); // Delete the first line because it contains '00000000'
+        addLogToReportFile(`--- All needed information from ${file} was successfully read (promoID, promoName, promoStartDate, promoEndDate) ---`);
+    });
+}
+
+function convertDate(date) {
+    let splittedDate = date.split('');
+    let decimalValue = parseInt(splittedDate[0], 16); // Convert hex value to decimal (A=10; B=11; C=12...)
+    splittedDate[0] = decimalValue - 10;
+    let convertedDate = splittedDate[0] + splittedDate[1] + '-' + splittedDate[2] + splittedDate[3] + '-' + splittedDate[4] + splittedDate[5];
+    return convertedDate;
 }
 
 module.exports = { validateAnswer, startTesting };
