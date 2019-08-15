@@ -6,7 +6,8 @@ const DEST_FOLDER_PATH_64 = "C:\\Program Files (x86)\\StoreLine\\Office\\Import"
 const DEST_FOLDER_PATH_32 = "C:\\Program Files\\StoreLine\\Office\\Import";
 
 let reportStream,
-    initialFolderContent = [];
+    initialFolderContent = [],
+    trueDestFolder;
 
 function validateAnswer(answer) {
     if(answer !== "done") {
@@ -29,15 +30,14 @@ async function startTesting() {
 
     await showInitialFolderContent();
 
-    /* let truePathToImportFolder = await searchForStorelineImportFolder();
-    if(!truePathToImportFolder) return; */
+    let truePathToImportFolder = await searchForStorelineImportFolder();
+    if(!truePathToImportFolder) return;
 
 
 }
 
 function checkInitialFolderExistence() {
     console.log(`--- Checking the folder ${INITIAL_FOLDER_PATH} existence... ---`);
-    
     try {
         initialFolderContent = fs.readdirSync(INITIAL_FOLDER_PATH);
         createReportFile();
@@ -82,22 +82,35 @@ function showInitialFolderContent() {
 
 function searchForStorelineImportFolder() {
     addLogToReportFile(`--- Searching for ".../StoreLine/Office/Import" folder... ---`);
-    let trueDestFolder;
-    let contentOfDestFolder = fs.readdirSync(DEST_FOLDER_PATH_32);
-    if(contentOfDestFolder.length === 0) {
-        contentOfDestFolder = fs.readdirSync(DEST_FOLDER_PATH_64);
-        if(contentOfDestFolder.length === 0) {
-            addLogToReportFile(`*** ERROR *** The folder ".../StoreLine/Office/Import" was not found ***`);
-            trueDestFolder = '';
+    let contentOfDestFolder;
+    try {
+        contentOfDestFolder = fs.readdirSync(DEST_FOLDER_PATH_32);
+        if(contentOfDestFolder.length) {
+            addLogToReportFile(`--- The folder ${DEST_FOLDER_PATH_32} was successfully found... ---`);
+            trueDestFolder = DEST_FOLDER_PATH_32;
+            return true;
         } else {
-            addLogToReportFile(`--- The folder ${DEST_FOLDER_PATH_64} was successfully found... ---`);
-            trueDestFolder = DEST_FOLDER_PATH_64;
+            addLogToReportFile(`*** ERROR *** The folder ${DEST_FOLDER_PATH_32} was successfully found but it's empty... ---`);
+            return false;
         }
-    } else {
-        addLogToReportFile(`--- The folder ${DEST_FOLDER_PATH_32} was successfully found... ---`);
-        trueDestFolder = DEST_FOLDER_PATH_32;
     }
-    return trueDestFolder;
+    catch(err) {
+        try {
+            contentOfDestFolder = fs.readdirSync(DEST_FOLDER_PATH_64);
+            if(contentOfDestFolder.length) {
+                addLogToReportFile(`--- The folder ${DEST_FOLDER_PATH_64} was successfully found... ---`);
+                trueDestFolder = DEST_FOLDER_PATH_64;
+                return true;
+            } else {
+                addLogToReportFile(`*** ERROR *** The folder ${DEST_FOLDER_PATH_64} was successfully found but it's empty... ---`);
+                return false;
+            }
+        }
+        catch(error) {
+            addLogToReportFile(`*** ERROR *** The folder ".../StoreLine/Office/Import" was not found ***`);
+            return false;
+        }
+    }
 }
 
 module.exports = { validateAnswer, startTesting };
