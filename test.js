@@ -33,7 +33,8 @@ async function startTesting() {
     let truePathToImportFolder = await searchForStorelineImportFolder();
     if(!truePathToImportFolder) return;
 
-
+    let bx257Exists = await searchForBX257();
+    if(!bx257Exists) return;
 }
 
 function checkInitialFolderExistence() {
@@ -111,6 +112,20 @@ function searchForStorelineImportFolder() {
             return false;
         }
     }
+}
+
+function searchForBX257() {
+    addLogToReportFile("--- Searching for the file BX257 in C:/For_testing... ---");
+    let bx257Exists = false;
+    for(let i = 0, len = initialFolderContent.length; i < len; i++) {
+        if(initialFolderContent[i].toUpperCase().substr(0, 5) === "BX257") {
+            addLogToReportFile(`--- File ${initialFolderContent[i]} was found ---`);
+            bx257Exists = true;
+            break;
+        }
+    }
+    if(!bx257Exists) addLogToReportFile("--- File BX257 was not found... ---");
+    return bx257Exists;
 }
 
 module.exports = { validateAnswer, startTesting };
