@@ -1,5 +1,6 @@
-const fs = require('fs');
-const LineByLineReader = require('line-by-line');
+const fs = require("fs");
+const LineByLineReader = require("line-by-line");
+const sql = require("mssql");
 
 const INITIAL_FOLDER_PATH = "C:\\For_testing";
 const REPORT_FILE_PATH = `${INITIAL_FOLDER_PATH}/Report.txt`;
@@ -9,7 +10,8 @@ const DEST_FOLDER_PATH_32 = "C:\\Program Files\\StoreLine\\Office\\Import";
 let reportStream,
     initialFolderContent = [],
     trueDestFolder,
-    promotionsInBX257 = [];
+    promotionsInBX257 = [],
+    promotionsInStorelineDB = [];
 
 function validateAnswer(answer) {
     if(answer !== "done") {
@@ -34,6 +36,9 @@ async function startTesting() {
 
     let truePathToImportFolder = await searchForStorelineImportFolder();
     if(!truePathToImportFolder) return;
+
+    let connectedToStorelineDB = await connectToStorelineDB();
+    if(!connectedToStorelineDB) return;
 
     let bx257Exists = await searchForBX257();
     if(!bx257Exists) return;
@@ -116,6 +121,57 @@ function searchForStorelineImportFolder() {
     }
 }
 
+async function connectToStorelineDB() {
+    addLogToReportFile("--- Connecting to StoreLine's database... ---");
+    const config = {
+        server: "localhost",
+        user: "SA",
+        password: "S@pwd01",
+        database: "FrontOff",
+    };
+    const configWithoutPassword = {
+        server: "localhost",
+        user: "SA",
+        password: "",
+        database: "FrontOff",
+    };
+    let pool;
+    try {
+        pool = await sql.connect(config);
+        addLogToReportFile("--- Connected to the database! ---");
+        console.log(pool);
+        await readStorelineDB(pool);
+        addLogToReportFile("--- All needed information from StoreLine DB was successfully received ---");
+        sql.close();
+        return true;
+    }
+    catch(err) {
+        try {
+            pool = await sql.connect(configWithoutPassword);
+            addLogToReportFile("--- Connected to the database without the password! ---");
+            console.log(pool);
+            await readStorelineDB(pool);
+            addLogToReportFile("--- All needed information from StoreLine DB was successfully received ---");
+            sql.close();
+            return true;
+        }
+        catch(err) {
+            addLogToReportFile("*** ERROR *** Can't connect to Storeline's database ***");
+            sql.close();
+            return false;
+        }
+    }
+}
+
+async function readStorelineDB(pool) {
+    addLogToReportFile("--- Getting needed information from the Storeline database (promoID, promoDescription, promoStartDate, promoEndDate)... ---");
+    const querySelectPromotionID = "select MMBR_PROM_ID from dbo.MMBR_PROM";
+    const querySelectPromotionName = "select PROM_DESC from dbo.MMBR_PROM";
+    const querySelectPromotionStartDate = "select STRT_DATE from dbo.MMBR_PROM";
+    const querySelectPromotionEndDate = "select END_DATE from dbo.MMBR_PROM";
+
+}
+
 function searchForBX257() {
     addLogToReportFile("--- Searching for the file BX257 in C:/For_testing... ---");
     let bx257Exists = false;
@@ -161,4 +217,7 @@ function convertDate(date) {
     return convertedDate;
 }
 
-module.exports = { validateAnswer, startTesting };
+module.exports = { 
+    validateAnswer, 
+    startTesting
+};
