@@ -4,7 +4,8 @@
   "description": "This is an automated way of importing of BX files and further reporting",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "createWinExe": "pkg -t node10-win-x64 index.js"
   },
   "repository": {
     "type": "git",

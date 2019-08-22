@@ -165,10 +165,10 @@ async function connectToStorelineDB() {
 
 async function readStorelineDB(pool) {
     addLogToReportFile("--- Getting needed information from the Storeline database (promoID, promoDescription, promoStartDate, promoEndDate)... ---");
-    const querySelectPromotionID = "select MMBR_PROM_ID from dbo.MMBR_PROM";
-    const querySelectPromotionName = "select PROM_DESC from dbo.MMBR_PROM";
-    const querySelectPromotionStartDate = "select STRT_DATE from dbo.MMBR_PROM";
-    const querySelectPromotionEndDate = "select END_DATE from dbo.MMBR_PROM";
+    const querySelectAllPromotionID = "select MMBR_PROM_ID from dbo.MMBR_PROM";
+    const querySelectAllPromotionName = "select PROM_DESC from dbo.MMBR_PROM";
+    const querySelectAllPromotionStartDate = "select STRT_DATE from dbo.MMBR_PROM";
+    const querySelectAllPromotionEndDate = "select END_DATE from dbo.MMBR_PROM";
 
 }
 
