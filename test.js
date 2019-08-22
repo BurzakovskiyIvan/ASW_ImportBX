@@ -139,25 +139,20 @@ async function connectToStorelineDB() {
     try {
         pool = await sql.connect(config);
         addLogToReportFile("--- Connected to the database! ---");
-        console.log(pool);
         await readStorelineDB(pool);
         addLogToReportFile("--- All needed information from StoreLine DB was successfully received ---");
-        sql.close();
         return true;
     }
     catch(err) {
         try {
             pool = await sql.connect(configWithoutPassword);
             addLogToReportFile("--- Connected to the database without the password! ---");
-            console.log(pool);
             await readStorelineDB(pool);
             addLogToReportFile("--- All needed information from StoreLine DB was successfully received ---");
-            sql.close();
             return true;
         }
         catch(err) {
             addLogToReportFile("*** ERROR *** Can't connect to Storeline's database ***");
-            sql.close();
             return false;
         }
     }
@@ -165,11 +160,21 @@ async function connectToStorelineDB() {
 
 async function readStorelineDB(pool) {
     addLogToReportFile("--- Getting needed information from the Storeline database (promoID, promoDescription, promoStartDate, promoEndDate)... ---");
-    const querySelectAllPromotionID = "select MMBR_PROM_ID from dbo.MMBR_PROM";
-    const querySelectAllPromotionName = "select PROM_DESC from dbo.MMBR_PROM";
-    const querySelectAllPromotionStartDate = "select STRT_DATE from dbo.MMBR_PROM";
-    const querySelectAllPromotionEndDate = "select END_DATE from dbo.MMBR_PROM";
-
+    const querySelectAllPromotions = "select MMBR_PROM_ID, PROM_DESC, STRT_DATE, END_DATE from dbo.MMBR_PROM";
+    try {
+        let queryResult = await pool.request().query(querySelectAllPromotions);
+        await queryResult.recordset.forEach((promo, index, array) => {
+            promotionsInStorelineDB.push({
+                id: promo.MMBR_PROM_ID,
+                name: promo.PROM_DESC.trim(),
+                startDate: convertDate(promo.STRT_DATE),
+                endDate: convertDate(promo.END_DATE)
+            })
+        })
+    } catch(err) {
+        addLogToReportFile("*** ERROR while reading the DB ***");
+        console.log(err);
+    }
 }
 
 function searchForBX257() {
@@ -198,8 +203,8 @@ function readBX257(file) {
         promotionsInBX257.push({
             id: parseInt(line.substring(64, 74)),
             name: line.substring(80, 100).trim(),
-            startDate: convertDate(line.substring(117, 124).trim()),
-            endDate: convertDate(line.substring(74, 81).trim())
+            startDate: convertDateFromHex(line.substring(117, 124).trim()),
+            endDate: convertDateFromHex(line.substring(74, 81).trim())
         })
     });
 
@@ -209,11 +214,19 @@ function readBX257(file) {
     });
 }
 
-function convertDate(date) {
+function convertDateFromHex(date) {
     let splittedDate = date.split('');
     let decimalValue = parseInt(splittedDate[0], 16); // Convert hex value to decimal (A=10; B=11; C=12...)
     splittedDate[0] = decimalValue - 10;
     let convertedDate = splittedDate[0] + splittedDate[1] + '-' + splittedDate[2] + splittedDate[3] + '-' + splittedDate[4] + splittedDate[5];
+    return convertedDate;
+}
+
+function convertDate(date) {
+    let year = String(date.getFullYear()).slice(2);
+    let month = (date.getMonth() + 1) < 10 ? "0" + (date.getMonth() + 1) : (date.getMonth() + 1);
+    let day = date.getDate() < 10 ? "0" + date.getDate() : date.getDate();
+    let convertedDate = `${year}-${month}-${day}`;
     return convertedDate;
 }
 
