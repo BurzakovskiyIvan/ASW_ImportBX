@@ -1,5 +1,5 @@
 # ASW_ImportBX
- This is an automated way of importing BX files and further creation of reporting
+ This is an automated way of importing BX files and further creation of report
 
 To start the app (as a Node app) do the following:
 1) In CMD navigate to the folder which contains the project;
